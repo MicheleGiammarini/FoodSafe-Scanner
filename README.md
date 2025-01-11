@@ -85,7 +85,7 @@ FoodSafe Scanner is a Flask-based web application that allows users to scan food
     Example request body:
     ```json
     {
-        "barcode": "1234567890123"
+    "barcode": "737628064502"
     }
     ```
 
