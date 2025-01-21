@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Scanner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+        }
+        .scanner {
+            text-align: center;
+            margin-top: 20px;
+        }
+        #barcode-input {
+            width: 300px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-left: 10px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .risk {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Product Scanner</h1>
+    <div class="scanner">
+        <input type="text" id="barcode-input" placeholder="Enter barcode">
+        <button id="scan-btn">Scan</button>
+    </div>
+    <div id="results"></div>
+
+    <script>
+        const scanButton = document.getElementById('scan-btn');
+        const barcodeInput = document.getElementById('barcode-input');
+        const resultsDiv = document.getElementById('results');
+
+        scanButton.addEventListener('click', async () => {
+            const barcode = barcodeInput.value.trim();
+
+            if (!barcode) {
+                resultsDiv.innerHTML = `<p class="risk">Please enter a barcode.</p>`;
+                return;
+            }
+
+            resultsDiv.innerHTML = `<p>Loading...</p>`;
+
+            try {
+                // Fetch product and risk analysis data from the updated API URL
+                const response = await fetch('https://164fe496-83fc-4631-b639-1cda16ae14cd-00-18s1mcjmf3xgv.spock.replit.dev/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        barcode: barcode
+                    }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    resultsDiv.innerHTML = `<p class="risk">Error: ${error.error}</p>`;
+                    return;
+                }
+
+                const data = await response.json();
+
+                // Display the product and risk information
+                resultsDiv.innerHTML = `
+                    <h2>Product: ${data.product_name || 'Unknown'}</h2>
+                    <h3>Ingredients:</h3>
+                    <ul>
+                        ${data.ingredients ? data.ingredients.map(ingredient => `<li>${ingredient}</li>`).join('') : '<li>No ingredients available.</li>'}
+                    </ul>
+                    <h3>Risks:</h3>
+                    ${data.risks && data.risks.length > 0
+                        ? `<ul>${data.risks.map(risk => `<li class="risk"><strong>${risk.ingredient}:</strong> ${risk.risk}</li>`).join('')}</ul>`
+                        : '<p>No risky ingredients found.</p>'
+                    }
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="risk">An error occurred: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
