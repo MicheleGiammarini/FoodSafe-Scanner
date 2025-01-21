@@ -1,12 +1,11 @@
 from flask import Flask, request, jsonify
 import requests
 import os
-from flask_cors import CORS  # Importiamo flask_cors per gestire CORS
+from flask_cors import CORS 
 
 app = Flask(__name__)
-CORS(app)  # Abilitiamo CORS per tutte le rotte
+CORS(app) 
 
-# Simulated database of risky ingredients
 RISKY_INGREDIENTS = {
     "aspartame": "May cause allergic reactions and has potential brain effects.",
     "BHA": "Potential carcinogen linked to liver and kidney damage.",
@@ -16,18 +15,16 @@ RISKY_INGREDIENTS = {
     "salt": "Excessive consumption of salt can lead to high blood pressure, increased risk of heart disease, stroke, kidney disease, and headaches due to dehydration."
 }
 
-# Funzione per ottenere i dettagli del prodotto dal database Open Food Facts
 def get_product_data(barcode):
     url = f"https://world.openfoodfacts.org/api/v0/product/{barcode}.json"
 
     try:
         response = requests.get(url, timeout=5)
-        response.raise_for_status()  # Lancia un'eccezione se ci sono errori HTTP
-        return response.json()  # Restituisce i dati del prodotto
+        response.raise_for_status() 
+        return response.json()  
     except requests.exceptions.RequestException as e:
         raise Exception(f"Failed to fetch product data: {str(e)}")
 
-# Endpoint per ottenere informazioni sul prodotto tramite il barcode
 @app.route('/scan', methods=['POST'])
 def scan_barcode():
     data = request.get_json()
@@ -52,7 +49,6 @@ def scan_barcode():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Endpoint per analizzare gli ingredienti e verificare se ci sono ingredienti rischiosi
 @app.route('/analyze', methods=['POST'])
 def analyze_ingredients():
     data = request.get_json()
@@ -70,7 +66,6 @@ def analyze_ingredients():
         product = product_data['product']
         ingredients = [i.get('text', '').lower() for i in product.get("ingredients", [])]
 
-        # Analisi degli ingredienti rispetto alla lista degli ingredienti rischiosi
         risks = []
         for ingredient in ingredients:
             if ingredient in RISKY_INGREDIENTS:
@@ -88,7 +83,6 @@ def analyze_ingredients():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Avvio del server
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  # Usa la porta dinamica di Replit, o la porta 5000 come predefinita
     app.run(host='0.0.0.0', port=port, debug=True)
